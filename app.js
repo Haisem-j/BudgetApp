@@ -87,11 +87,17 @@ var budgetController = (function (){
             console.log(data);
         },
 
-        tester2: function(){
-            var sum = 0;
-            var type = 'inc';
-            
-            console.log(calculateTotal(type));
+        deleteItem: function(type, id){
+            var index, ids;
+            ids = data.allItems[type].map(function(current){
+                return current.id;
+            });
+
+            index = ids.indexOf(id);
+
+            if(index !== -1){
+                data.allItems[type].splice(index, 1);
+            }
 
         }
     }
@@ -110,7 +116,8 @@ var uiController = (function (){
         budgetLabel: '.budget__value',
         incomeLabel:'.budget__income--value',
         expenseLabel: '.budget__expenses--value',
-        percentLabel: '.budget__expenses--percentage'
+        percentLabel: '.budget__expenses--percentage',
+        container: '.container'
     }
     return{
         getInput: function(){
@@ -140,10 +147,10 @@ var uiController = (function (){
             var html, element;
             if(type == 'exp'){
             element = domStrings.expensesContainer;
-            html = '<div class="item clearfix" id="expense-%id%"> <div class="item__description">%description%</div> <div class="right clearfix"> <div class="item__value">%value%</div> <div class="item__percentage">21%</div><div class="item__delete">   <button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button>   </div>    </div></div>';      
+            html = '<div class="item clearfix" id="exp-%id%"> <div class="item__description">%description%</div> <div class="right clearfix"> <div class="item__value">%value%</div> <div class="item__percentage">21%</div><div class="item__delete">   <button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button>   </div>    </div></div>';      
         }else if(type == 'inc'){
             element = domStrings.incomeContainer;            
-            html = '<div class="item clearfix" id="income-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button>   </div></div></div>'
+            html = '<div class="item clearfix" id="inc-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button>   </div></div></div>'
         }
             //Replace placeholder text with some actual data
             newHTML = html.replace('%id%', object.id);
@@ -152,6 +159,11 @@ var uiController = (function (){
 
             //Insert the HTML into the DOM
             document.querySelector(element).insertAdjacentHTML('beforeend', newHTML);
+        },
+
+        deleteListItem: function(selectorID){
+            var el = document.getElementById(selectorID);
+            el.parentNode.removeChild(el);  
         },
         
         displayBudget: function(obj){
@@ -186,6 +198,8 @@ var setupEventListeners = function(){
               ctrlAddItem();
           }
     });
+
+    document.querySelector(DOM.container).addEventListener('click', ctrlDeleteItem);
 }
     var updateBudget = function(){
         var budget;
@@ -219,7 +233,28 @@ var setupEventListeners = function(){
         //Calculate and update budget
         updateBudget();
 
-    }  
+    };
+    
+    var ctrlDeleteItem = function(event){
+        var itemID, splitID, type, ID;
+        itemID = event.target.parentNode.parentNode.parentNode.parentNode.id;
+
+        if(itemID){
+            splitID =itemID.split('-');
+            type = splitID[0];
+            ID = parseInt(splitID[1]);
+
+
+            //Delete item from data structure
+            budgetCtrl.deleteItem(type, ID);
+
+            ///Delete from UI
+            uiCtrl.deleteListItem(itemID);
+
+            //Update and show new budget
+            updateBudget();
+        }
+    }
     
     return {
         init: function(){
@@ -236,3 +271,5 @@ var setupEventListeners = function(){
 
 
 controller.init();
+
+
